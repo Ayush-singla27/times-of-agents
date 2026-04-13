@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentpress-backend"
+version = "0.1.0"
+description = "CLI multi-agent news discussion backend for AgentPress"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "AgentPress Team" }]
+keywords = ["multi-agent", "cli", "news", "simulation"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+dependencies = [
+  "langchain>=0.1.0",
+  "langchain-anthropic>=0.1.0",
+  "crewai>=0.80.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+
+[project.scripts]
+agentpress = "agentpress_backend.interfaces.cli.main:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
