@@ -28,7 +28,7 @@ pip install -e ".[dev]"
 ## Quick Start
 
 ```bash
-agentpress --rounds 2
+times-of-agents --rounds 2
 ```
 
 ## Local Files You Can Edit

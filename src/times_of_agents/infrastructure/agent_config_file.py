@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from agentpress_backend.domain.entities import AgentConfig, AgentIdentity, EmotionProfile
+from times_of_agents.domain.entities import AgentConfig, AgentIdentity, EmotionProfile
 
 
 def load_agent_configs(config_path: Path) -> list[AgentConfig]:

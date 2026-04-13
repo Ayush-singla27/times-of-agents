@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from agentpress_backend.domain.entities import DiscussionResult
+from times_of_agents.domain.entities import DiscussionResult
 
 
 def write_result_json(result: DiscussionResult, output_path: Path) -> None:

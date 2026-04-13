@@ -7,21 +7,21 @@ from typing import Any
 import os
 from crewai import Crew, Process
 
-from agentpress_backend.application.agent_runtime import build_system_prompt
-from agentpress_backend.application.crew_agents import build_crewai_agent
-from agentpress_backend.application.crew_tasks import (
+from times_of_agents.application.agent_runtime import build_system_prompt
+from times_of_agents.application.crew_agents import build_crewai_agent
+from times_of_agents.application.crew_tasks import (
     build_interjection_task,
     build_interjection_task_prompt,
     build_speaking_task,
     build_speaking_task_prompt,
 )
-from agentpress_backend.domain.entities import (
+from times_of_agents.domain.entities import (
     AgentConfig,
     DiscussionResult,
     Message,
     TokenUsageSummary,
 )
-from agentpress_backend.infrastructure.llm_factory import create_crewai_llm
+from times_of_agents.infrastructure.llm_factory import create_crewai_llm
 
 
 def _order_configs_for_round(

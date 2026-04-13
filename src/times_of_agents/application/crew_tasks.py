@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from crewai import Agent, Task
 
-from agentpress_backend.domain.entities import Message
+from times_of_agents.domain.entities import Message
 
 
 def build_speaking_task_prompt(

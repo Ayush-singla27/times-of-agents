@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from agentpress_backend.infrastructure.topic_file import load_topic
+from times_of_agents.infrastructure.topic_file import load_topic
 
 
 def test_load_topic_success(tmp_path: Path) -> None:

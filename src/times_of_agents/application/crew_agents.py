@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from crewai import Agent, LLM
 
-from agentpress_backend.application.agent_runtime import build_system_prompt
-from agentpress_backend.domain.entities import AgentConfig
+from times_of_agents.application.agent_runtime import build_system_prompt
+from times_of_agents.domain.entities import AgentConfig
 
 
 def build_crewai_agent(config: AgentConfig, llm: LLM) -> Agent:

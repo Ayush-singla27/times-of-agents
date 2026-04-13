@@ -4,10 +4,10 @@ import argparse
 import logging
 from pathlib import Path
 
-from agentpress_backend.application.discussion_orchestrator import run_discussion
-from agentpress_backend.infrastructure.agent_config_file import load_agent_configs
-from agentpress_backend.infrastructure.result_file_writer import write_result_json
-from agentpress_backend.infrastructure.topic_file import load_topic
+from times_of_agents.application.discussion_orchestrator import run_discussion
+from times_of_agents.infrastructure.agent_config_file import load_agent_configs
+from times_of_agents.infrastructure.result_file_writer import write_result_json
+from times_of_agents.infrastructure.topic_file import load_topic
 
 DEFAULT_TOPIC_FILE = Path("data/topic.txt")
 DEFAULT_AGENT_CONFIG_FILE = Path("data/agents.json")
@@ -15,7 +15,7 @@ DEFAULT_AGENT_CONFIG_FILE = Path("data/agents.json")
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="agentpress",
+        prog="times-of-agents",
         description="Run a CLI multi-agent LLM discussion on a local news topic.",
     )
     parser.add_argument("--topic-file", type=Path, default=DEFAULT_TOPIC_FILE, help="Path to topic file")
@@ -41,7 +41,7 @@ def main() -> None:
         level=getattr(logging, args.log_level),
         format="%(asctime)s %(levelname)s %(name)s - %(message)s",
     )
-    logger = logging.getLogger("agentpress")
+    logger = logging.getLogger("times-of-agents")
 
     logger.info("Initializing multi-agent discussion (LLM-powered)...")
     logger.info("Model: %s", args.model)

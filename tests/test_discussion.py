@@ -3,8 +3,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from agentpress_backend.application.discussion_orchestrator import run_discussion
-from agentpress_backend.domain.entities import AgentConfig, AgentIdentity, EmotionProfile
+from times_of_agents.application.discussion_orchestrator import run_discussion
+from times_of_agents.domain.entities import AgentConfig, AgentIdentity, EmotionProfile
 
 FAKE_RESPONSE = "Sample CrewAI response about the topic."
 
@@ -41,10 +41,10 @@ def _sample_agent(agent_id: str) -> AgentConfig:
     )
 
 
-@patch("agentpress_backend.application.discussion_orchestrator.create_crewai_llm")
-@patch("agentpress_backend.application.discussion_orchestrator.build_speaking_task")
-@patch("agentpress_backend.application.discussion_orchestrator.build_crewai_agent")
-@patch("agentpress_backend.application.discussion_orchestrator.Crew")
+@patch("times_of_agents.application.discussion_orchestrator.create_crewai_llm")
+@patch("times_of_agents.application.discussion_orchestrator.build_speaking_task")
+@patch("times_of_agents.application.discussion_orchestrator.build_crewai_agent")
+@patch("times_of_agents.application.discussion_orchestrator.Crew")
 def test_run_discussion_message_count(
     mock_crew_cls, mock_build_agent, mock_build_task, mock_llm_factory
 ) -> None:
@@ -68,10 +68,10 @@ def test_run_discussion_message_count(
     assert all(msg.content == FAKE_RESPONSE for msg in result.transcript)
 
 
-@patch("agentpress_backend.application.discussion_orchestrator.create_crewai_llm")
-@patch("agentpress_backend.application.discussion_orchestrator.build_speaking_task")
-@patch("agentpress_backend.application.discussion_orchestrator.build_crewai_agent")
-@patch("agentpress_backend.application.discussion_orchestrator.Crew")
+@patch("times_of_agents.application.discussion_orchestrator.create_crewai_llm")
+@patch("times_of_agents.application.discussion_orchestrator.build_speaking_task")
+@patch("times_of_agents.application.discussion_orchestrator.build_crewai_agent")
+@patch("times_of_agents.application.discussion_orchestrator.Crew")
 def test_run_discussion_round_indices(
     mock_crew_cls, mock_build_agent, mock_build_task, mock_llm_factory
 ) -> None:
@@ -92,10 +92,10 @@ def test_run_discussion_round_indices(
     assert [msg.round_index for msg in result.transcript] == [1, 1, 2, 2, 3, 3]
 
 
-@patch("agentpress_backend.application.discussion_orchestrator.create_crewai_llm")
-@patch("agentpress_backend.application.discussion_orchestrator.build_speaking_task")
-@patch("agentpress_backend.application.discussion_orchestrator.build_crewai_agent")
-@patch("agentpress_backend.application.discussion_orchestrator.Crew")
+@patch("times_of_agents.application.discussion_orchestrator.create_crewai_llm")
+@patch("times_of_agents.application.discussion_orchestrator.build_speaking_task")
+@patch("times_of_agents.application.discussion_orchestrator.build_crewai_agent")
+@patch("times_of_agents.application.discussion_orchestrator.Crew")
 def test_run_discussion_emotion_attached(
     mock_crew_cls, mock_build_agent, mock_build_task, mock_llm_factory
 ) -> None:
@@ -116,8 +116,8 @@ def test_run_discussion_emotion_attached(
     assert result.transcript[0].dominant_emotion == "anticipation"
 
 
-@patch("agentpress_backend.application.discussion_orchestrator.create_crewai_llm")
-@patch("agentpress_backend.application.discussion_orchestrator.Crew")
+@patch("times_of_agents.application.discussion_orchestrator.create_crewai_llm")
+@patch("times_of_agents.application.discussion_orchestrator.Crew")
 def test_run_discussion_invalid_rounds(mock_crew_cls, mock_llm_factory) -> None:
     import pytest
 
@@ -131,8 +131,8 @@ def test_run_discussion_invalid_rounds(mock_crew_cls, mock_llm_factory) -> None:
         )
 
 
-@patch("agentpress_backend.application.discussion_orchestrator.create_crewai_llm")
-@patch("agentpress_backend.application.discussion_orchestrator.Crew")
+@patch("times_of_agents.application.discussion_orchestrator.create_crewai_llm")
+@patch("times_of_agents.application.discussion_orchestrator.Crew")
 def test_run_discussion_empty_agents(mock_crew_cls, mock_llm_factory) -> None:
     import pytest
 
@@ -146,10 +146,10 @@ def test_run_discussion_empty_agents(mock_crew_cls, mock_llm_factory) -> None:
         )
 
 
-@patch("agentpress_backend.application.discussion_orchestrator.create_crewai_llm")
-@patch("agentpress_backend.application.discussion_orchestrator.build_speaking_task")
-@patch("agentpress_backend.application.discussion_orchestrator.build_crewai_agent")
-@patch("agentpress_backend.application.discussion_orchestrator.Crew")
+@patch("times_of_agents.application.discussion_orchestrator.create_crewai_llm")
+@patch("times_of_agents.application.discussion_orchestrator.build_speaking_task")
+@patch("times_of_agents.application.discussion_orchestrator.build_crewai_agent")
+@patch("times_of_agents.application.discussion_orchestrator.Crew")
 def test_second_task_receives_prior_context(
     mock_crew_cls, mock_build_agent, mock_build_task, mock_llm_factory
 ) -> None:

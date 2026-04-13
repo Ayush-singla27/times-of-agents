@@ -3,12 +3,12 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agentpress-backend"
+name = "times-of-agents"
 version = "0.1.0"
-description = "CLI multi-agent news discussion backend for AgentPress"
+description = "CLI multi-agent news discussion system"
 readme = "README.md"
 requires-python = ">=3.11"
-authors = [{ name = "AgentPress Team" }]
+authors = [{ name = "Times of Agents Team" }]
 keywords = ["multi-agent", "cli", "news", "simulation"]
 classifiers = [
   "Programming Language :: Python :: 3",
@@ -29,7 +29,7 @@ dev = [
 ]
 
 [project.scripts]
-agentpress = "agentpress_backend.interfaces.cli.main:main"
+times-of-agents = "times_of_agents.interfaces.cli.main:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

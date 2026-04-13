@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from agentpress_backend.domain.entities import AgentConfig
+from times_of_agents.domain.entities import AgentConfig
 
 
 def build_system_prompt(agent_config: AgentConfig) -> str:
