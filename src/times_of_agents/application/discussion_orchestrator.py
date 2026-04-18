@@ -157,6 +157,7 @@ def _run_single_task(agent: Any, task: Any) -> Any:
         process=Process.sequential,
         verbose=False,
         memory=False,
+        respect_context_window=True,
     )
     return crew.kickoff()
 
@@ -173,10 +174,12 @@ def _estimate_usage_for_prompt(
 
 
 def _merge_usage(target: TokenUsageSummary, addition: TokenUsageSummary) -> None:
+    print("old :" , target)
     target.call_count += addition.call_count
     target.input_tokens += addition.input_tokens
     target.output_tokens += addition.output_tokens
     target.total_tokens += addition.total_tokens
+    print("new :", target)
 
 
 def _is_no_interjection(text: str) -> bool:
@@ -193,13 +196,14 @@ class RoundDiscussionCrew:
         topic: str,
         round_index: int,
         transcript: list[Message],
+        agents_by_id: dict[str, Any],
     ) -> None:
         self.agent_configs = agent_configs
         self.llm = llm
         self.topic = topic
         self.round_index = round_index
         self.transcript = transcript
-        self.agents = [build_crewai_agent(config=cfg, llm=self.llm) for cfg in self.agent_configs]
+        self.agents = [agents_by_id[cfg.identity.id] for cfg in self.agent_configs]
         self.tasks = [
             build_speaking_task(
                 agent=self.agents[i],
@@ -218,6 +222,7 @@ class RoundDiscussionCrew:
             process=Process.sequential,
             verbose=False,
             memory=False,
+            respect_context_window=True,
         )
 
 
@@ -226,7 +231,7 @@ def run_discussion(
     agent_configs: list[AgentConfig],
     rounds: int,
     seed: int = 42,
-    model: str = "claude-sonnet-4-5",
+    model: str = "gpt-4o-mini",
     interjections_enabled: bool = True,
 ) -> DiscussionResult:
     if rounds <= 0:
@@ -236,6 +241,10 @@ def run_discussion(
 
     rng = Random(seed)
     llm = create_crewai_llm(model=model)
+    agents_by_id = {
+        cfg.identity.id: build_crewai_agent(config=cfg, llm=llm)
+        for cfg in agent_configs
+    }
 
     transcript: list[Message] = []
     usage_summary = TokenUsageSummary()
@@ -250,6 +259,7 @@ def run_discussion(
             topic=topic,
             round_index=round_index,
             transcript=transcript,
+            agents_by_id=agents_by_id,
         )
         ordered_agents = round_crew.agents
         interjected_ids: set[str] = set()
@@ -282,6 +292,7 @@ def run_discussion(
                 agent_name=cfg.identity.name,
                 content=raw_content,
                 dominant_emotion=cfg.emotion_profile.dominant_emotion(),
+                is_interjection=False,
                 created_at=datetime.now(UTC),
             )
             transcript.append(latest_message)
@@ -336,6 +347,7 @@ def run_discussion(
                         agent_name=other_cfg.identity.name,
                         content=interjection_text,
                         dominant_emotion=other_cfg.emotion_profile.dominant_emotion(),
+                        is_interjection=True,
                         created_at=datetime.now(UTC),
                     )
                 )

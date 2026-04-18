@@ -12,3 +12,4 @@ def load_topic(topic_file: Path) -> str:
         raise ValueError("Topic file is empty")
 
     return topic
+    return _load_topic_cached(topic_file.resolve())

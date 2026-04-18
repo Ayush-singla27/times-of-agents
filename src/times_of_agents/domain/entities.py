@@ -67,6 +67,7 @@ class Message:
     agent_name: str
     content: str
     dominant_emotion: str
+    is_interjection: bool = False
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
@@ -110,6 +111,7 @@ class DiscussionResult:
                     "agent_name": msg.agent_name,
                     "content": msg.content,
                     "dominant_emotion": msg.dominant_emotion,
+                    "is_interjection": msg.is_interjection,
                     "created_at": msg.created_at.isoformat(),
                 }
                 for msg in self.transcript
