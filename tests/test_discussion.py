@@ -66,6 +66,7 @@ def test_run_discussion_message_count(
     assert result.rounds == 2
     assert len(result.transcript) == 4
     assert all(msg.content == FAKE_RESPONSE for msg in result.transcript)
+    assert all(msg.is_interjection is False for msg in result.transcript)
 
 
 @patch("times_of_agents.application.discussion_orchestrator.create_crewai_llm")

@@ -27,7 +27,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--rounds", type=int, default=3, help="Number of discussion rounds")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for agent ordering")
-    parser.add_argument("--model", type=str, default="claude-sonnet-4-5", help="Claude model ID")
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="gpt-4o-mini",
+        help="Model ID (for example: gpt-4o-mini or openai/gpt-4o-mini)",
+    )
     parser.add_argument("--output-file", type=Path, default=None, help="Optional output transcript JSON path")
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG", "INFO", "WARNING", "ERROR"])
     return parser
@@ -45,7 +50,7 @@ def main() -> None:
 
     logger.info("Initializing multi-agent discussion (LLM-powered)...")
     logger.info("Model: %s", args.model)
-    logger.info("Note: Ensure ANTHROPIC_API_KEY environment variable is set")
+    logger.info("Note: Ensure the matching provider API key is set (for GPT models, OPENAI_API_KEY)")
 
     result = run_discussion(
         topic=load_topic(args.topic_file),
@@ -60,7 +65,8 @@ def main() -> None:
     logger.info("Messages generated: %d", len(result.transcript))
 
     for msg in result.transcript:
-        print(f"[R{msg.round_index}] {msg.agent_name} ({msg.dominant_emotion}):\n{msg.content}\n")
+        message_kind = "INTERJECTION" if msg.is_interjection else "STATEMENT"
+        print(f"[R{msg.round_index}] [{message_kind}] {msg.agent_name} ({msg.dominant_emotion}):\n{msg.content}\n")
 
     if args.output_file is not None:
         write_result_json(result=result, output_path=args.output_file)

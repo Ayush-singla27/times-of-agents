@@ -1,6 +1,6 @@
 # AgentPress Backend (CLI)
 
-An agentic Python backend for a multi-agent news discussion system powered by **CrewAI** and Claude Sonnet (Anthropic).
+An agentic Python backend for a multi-agent news discussion system powered by **CrewAI** and GPT-4o mini (OpenAI).
 
 ## What This Base Includes
 
@@ -14,10 +14,12 @@ An agentic Python backend for a multi-agent news discussion system powered by **
 ## Setup
 
 ```bash
-# Set Claude API key
-export ANTHROPIC_API_KEY="your-api-key-here"
-export TOKEN_INPUT_COST_PER_1K_USD=0.003
-export TOKEN_OUTPUT_COST_PER_1K_USD=0.015
+# Set OpenAI API key
+export OPENAI_API_KEY="your-api-key-here"
+
+# Optional: token pricing for cost estimation (GPT-4o mini)
+export TOKEN_INPUT_COST_PER_1K_USD=0.00015
+export TOKEN_OUTPUT_COST_PER_1K_USD=0.00060
 
 # Create environment and install
 python3 -m venv .venv
@@ -51,4 +53,3 @@ Each agent supports a Plutchik-inspired profile baked into its `backstory`:
 | `sadness`     | 0.0 – 1.0 |
 | `disgust`     | 0.0 – 1.0 |
 | `anger`       | 0.0 – 1.0 |
-
