@@ -34,8 +34,7 @@ class EmotionProfile:
                 raise ValueError(f"Emotion '{key}' must be between 0.0 and 1.0, got {value}")
 
     def dominant_emotion(self) -> str:
-        ranked = sorted(self.to_dict().items(), key=lambda kv: kv[1], reverse=True)
-        return ranked[0][0]
+        return max(EMOTION_KEYS, key=lambda k: getattr(self, k))
 
     def to_dict(self) -> dict[str, float]:
         return {key: getattr(self, key) for key in EMOTION_KEYS}

@@ -170,5 +170,8 @@ def test_second_task_receives_prior_context(
 
     assert mock_build_task.call_count == 2
     assert mock_build_task.call_args_list[0].kwargs["prior_messages"] == []
+    second_prior = mock_build_task.call_args_list[1].kwargs["prior_messages"]
+    assert len(second_prior) == 1
+    assert second_prior[0].content == FAKE_RESPONSE
     assert mock_build_task.call_args_list[1].kwargs["round_index"] == 1
 
