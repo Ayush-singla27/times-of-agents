@@ -8,7 +8,7 @@ from times_of_agents.domain.entities import Message
 def _build_context_block(prior_messages: list[Message]) -> str:
     if not prior_messages:
         return ""
-    lines = [f"- R{m.round_index} {m.agent_name} ({m.dominant_emotion}): {m.content[:220]}" for m in prior_messages[-8:]]
+    lines = [f"- R{m.round_index} {m.agent_name} ({m.dominant_emotion}): {m.content[:220]}" for m in prior_messages]
     return "\nPrior discussion context (recent peer comments):\n" + "\n".join(lines) + "\n"
 
 
@@ -17,12 +17,14 @@ def build_speaking_task_prompt(
     topic: str,
     round_index: int,
     prior_messages: list[Message],
+    include_topic: bool,
 ) -> tuple[str, str]:
     context_block = _build_context_block(prior_messages)
+    topic_line = f"Topic: {topic}\n" if include_topic else ""
 
     description = (
         f"Round {round_index} of the multi-agent news discussion.\n\n"
-        f"Topic: {topic}\n"
+        f"{topic_line}"
         f"{context_block}"
         "\n"
         "Write one concise comment for this round as part of an ongoing conversation, not a standalone essay. "
@@ -52,11 +54,13 @@ def build_speaking_task(
     topic: str,
     round_index: int,
     prior_messages: list[Message],
+    include_topic: bool,
 ) -> Task:
     description, expected_output = build_speaking_task_prompt(
         topic=topic,
         round_index=round_index,
         prior_messages=prior_messages,
+        include_topic=include_topic,
     )
 
     return Task(
@@ -72,12 +76,14 @@ def build_interjection_task_prompt(
     round_index: int,
     prior_messages: list[Message],
     latest_message: Message,
+    include_topic: bool,
 ) -> tuple[str, str]:
     context_block = _build_context_block(prior_messages)
+    topic_line = f"Topic: {topic}\n" if include_topic else ""
 
     description = (
         f"Round {round_index} interjection check.\n\n"
-        f"Topic: {topic}\n"
+        f"{topic_line}"
         f"Latest message to react to: {latest_message.agent_name}: {latest_message.content[:240]}\n"
         f"{context_block}"
         "\n"
@@ -107,12 +113,14 @@ def build_interjection_task(
     round_index: int,
     prior_messages: list[Message],
     latest_message: Message,
+    include_topic: bool,
 ) -> Task:
     description, expected_output = build_interjection_task_prompt(
         topic=topic,
         round_index=round_index,
         prior_messages=prior_messages,
         latest_message=latest_message,
+        include_topic=include_topic,
     )
 
     return Task(

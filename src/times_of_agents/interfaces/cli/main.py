@@ -159,9 +159,12 @@ def main() -> None:
     else:
         topic = _load_topic_from_articles_or_file(args.topic_file)
 
+    agent_configs = load_agent_configs(args.agent_config_file)
+    agent_configs_by_id = {cfg.identity.id: cfg for cfg in agent_configs}
+
     result = run_discussion(
         topic=topic,
-        agent_configs=load_agent_configs(args.agent_config_file),
+        agent_configs=agent_configs,
         rounds=args.rounds,
         seed=args.seed,
         model=args.model,
@@ -173,7 +176,18 @@ def main() -> None:
 
     for msg in result.transcript:
         message_kind = "INTERJECTION" if msg.is_interjection else "STATEMENT"
-        print(f"[R{msg.round_index}] [{message_kind}] {msg.agent_name} ({msg.dominant_emotion}):\n{msg.content}\n")
+        agent_cfg = agent_configs_by_id.get(msg.agent_id)
+        memory_info = ""
+        if agent_cfg is not None:
+            memory_info = (
+                f" [memory_window_messages={agent_cfg.memory_window_messages}, "
+                f"include_topic_every_turn={agent_cfg.include_topic_every_turn}, "
+                f"temperature={agent_cfg.temperature}]"
+            )
+        print(
+            f"[R{msg.round_index}] [{message_kind}] {msg.agent_name} ({msg.dominant_emotion})"
+            f"{memory_info}:\n{msg.content}\n"
+        )
 
     if args.output_file is not None:
         write_result_json(result=result, output_path=args.output_file)

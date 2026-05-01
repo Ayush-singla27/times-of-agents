@@ -8,6 +8,8 @@ An agentic Python backend for a multi-agent news discussion system powered by **
 - A dedicated news curator tool that fetches and deduplicates trending news
 - Generated article files stored individually in `data/articles/`
 - CLI run modes to generate news articles, run discussion, or both
+- Per-agent memory controls (`memory_window_messages` and `include_topic_every_turn`)
+- Per-agent generation control (`temperature`)
 
 ## Setup
 
@@ -78,4 +80,27 @@ The Tavily search tool can be used by agents to retrieve web results:
 from times_of_agents.infrastructure.tavily_search_tool import tavily_search_tool
 
 payload = tavily_search_tool.run(query="latest AI chip export rules", max_results=3)
+```
+
+## Agent Config Memory Controls
+
+Each item in `data/agents.json` can tune context behavior per agent:
+
+- `memory_window_messages`: number of recent transcript messages included in prompts for that agent (for example `5`, `10`, `15`)
+- `include_topic_every_turn`:
+  - `true` -> include the topic line in every speaking/interjection prompt
+  - `false` -> include the topic once for that agent, then rely on conversation context
+- `temperature`: controls creativity/randomness per agent (default `0.7`, valid range `0.0` to `2.0`)
+
+Example:
+
+```json
+{
+  "identity": { "id": "geo-risk-01", "name": "Geo Risk", "role": "Analyst", "description": "..." },
+  "emotion_profile": { "trust": 0.6, "anticipation": 0.5, "joy": 0.2, "surprise": 0.3, "fear": 0.6, "sadness": 0.4, "disgust": 0.2, "anger": 0.3 },
+  "speaking_weight": 1.1,
+  "memory_window_messages": 10,
+  "include_topic_every_turn": false,
+  "temperature": 0.8
+}
 ```

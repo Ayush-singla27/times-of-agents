@@ -122,6 +122,24 @@ def _is_no_interjection(text: str) -> bool:
     return text.strip().upper() == "NO_INTERJECTION"
 
 
+def _recent_messages(transcript: list[Message], memory_window_messages: int) -> list[Message]:
+    if memory_window_messages <= 0:
+        return []
+    return transcript[-memory_window_messages:]
+
+
+def _should_include_topic(
+    config: AgentConfig,
+    topic_shown_once: set[str],
+) -> bool:
+    if config.include_topic_every_turn:
+        return True
+    if config.identity.id in topic_shown_once:
+        return False
+    topic_shown_once.add(config.identity.id)
+    return True
+
+
 def run_discussion(
     topic: str,
     agent_configs: list[AgentConfig],
@@ -136,8 +154,13 @@ def run_discussion(
         raise ValueError("agent_configs must not be empty")
 
     rng = Random(seed)
-    llm = create_crewai_llm(model=model)
-    agents_by_id = {cfg.identity.id: build_crewai_agent(config=cfg, llm=llm) for cfg in agent_configs}
+    agents_by_id = {
+        cfg.identity.id: build_crewai_agent(
+            config=cfg,
+            llm=create_crewai_llm(model=model, temperature=cfg.temperature),
+        )
+        for cfg in agent_configs
+    }
 
     transcript: list[Message] = []
     usage_summary = TokenUsageSummary()
@@ -145,17 +168,21 @@ def run_discussion(
     input_rate, output_rate = resolve_cost_rates()
 
     prompt_topic = _prepare_topic_for_prompt(topic)
+    topic_shown_once: set[str] = set()
 
     for round_index in range(1, rounds + 1):
         ordered_configs = _order_configs_for_round(agent_configs, rng)
         interjected_ids: set[str] = set()
 
         for position, cfg in enumerate(ordered_configs):
+            speaking_prior_messages = _recent_messages(transcript, cfg.memory_window_messages)
+            speaking_include_topic = _should_include_topic(cfg, topic_shown_once)
             speaking_task = build_speaking_task(
                 agent=agents_by_id[cfg.identity.id],
                 topic=prompt_topic,
                 round_index=round_index,
-                prior_messages=transcript[-8:],
+                prior_messages=speaking_prior_messages,
+                include_topic=speaking_include_topic,
             )
             speaking_result = _run_single_task(agents_by_id[cfg.identity.id], speaking_task)
             raw_content = _task_raw_output(speaking_result, 0) or str(speaking_result).strip()
@@ -165,7 +192,8 @@ def run_discussion(
                 description, expected_output = build_speaking_task_prompt(
                     topic=prompt_topic,
                     round_index=round_index,
-                    prior_messages=transcript[-8:],
+                    prior_messages=speaking_prior_messages,
+                    include_topic=speaking_include_topic,
                 )
                 speaking_usage = _estimate_usage_for_prompt(cfg, description, expected_output, raw_content)
                 used_estimate = True
@@ -190,12 +218,15 @@ def run_discussion(
                 if other_cfg.identity.id in interjected_ids:
                     continue
                 other_agent = agents_by_id[other_cfg.identity.id]
+                interjection_prior_messages = _recent_messages(transcript, other_cfg.memory_window_messages)
+                interjection_include_topic = _should_include_topic(other_cfg, topic_shown_once)
                 interjection_task = build_interjection_task(
                     agent=other_agent,
                     topic=prompt_topic,
                     round_index=round_index,
-                    prior_messages=transcript[-8:],
+                    prior_messages=interjection_prior_messages,
                     latest_message=latest_message,
+                    include_topic=interjection_include_topic,
                 )
                 interjection_result = _run_single_task(other_agent, interjection_task)
                 interjection_text = _task_raw_output(interjection_result, 0) or str(interjection_result).strip()
@@ -205,8 +236,9 @@ def run_discussion(
                     description, expected_output = build_interjection_task_prompt(
                         topic=prompt_topic,
                         round_index=round_index,
-                        prior_messages=transcript[-8:],
+                        prior_messages=interjection_prior_messages,
                         latest_message=latest_message,
+                        include_topic=interjection_include_topic,
                     )
                     interjection_usage = _estimate_usage_for_prompt(
                         other_cfg,

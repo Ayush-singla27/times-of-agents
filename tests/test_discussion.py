@@ -19,7 +19,13 @@ def _make_crew_output(n_agents: int) -> SimpleNamespace:
     )
 
 
-def _sample_agent(agent_id: str) -> AgentConfig:
+def _sample_agent(
+    agent_id: str,
+    *,
+    memory_window_messages: int = 8,
+    include_topic_every_turn: bool = True,
+    temperature: float = 0.7,
+) -> AgentConfig:
     return AgentConfig(
         identity=AgentIdentity(
             id=agent_id,
@@ -38,6 +44,9 @@ def _sample_agent(agent_id: str) -> AgentConfig:
             anger=0.3,
         ),
         speaking_weight=1.0,
+        memory_window_messages=memory_window_messages,
+        include_topic_every_turn=include_topic_every_turn,
+        temperature=temperature,
     )
 
 
@@ -175,3 +184,83 @@ def test_second_task_receives_prior_context(
     assert second_prior[0].content == FAKE_RESPONSE
     assert mock_build_task.call_args_list[1].kwargs["round_index"] == 1
 
+
+@patch("times_of_agents.application.discussion_orchestrator.create_crewai_llm")
+@patch("times_of_agents.application.discussion_orchestrator.build_speaking_task")
+@patch("times_of_agents.application.discussion_orchestrator.build_crewai_agent")
+@patch("times_of_agents.application.discussion_orchestrator.Crew")
+def test_memory_window_limits_prior_context(
+    mock_crew_cls, mock_build_agent, mock_build_task, mock_llm_factory
+) -> None:
+    mock_llm_factory.return_value = "anthropic/claude-sonnet-4-5"
+    mock_build_agent.return_value = MagicMock()
+    agents = [_sample_agent("m1", memory_window_messages=0)]
+    mock_crew_cls.return_value.kickoff.return_value = _make_crew_output(1)
+    mock_build_task.return_value = MagicMock()
+
+    run_discussion(
+        topic="Memory window test",
+        agent_configs=agents,
+        rounds=2,
+        seed=1,
+        interjections_enabled=False,
+    )
+
+    assert mock_build_task.call_count == 2
+    assert mock_build_task.call_args_list[0].kwargs["prior_messages"] == []
+    assert mock_build_task.call_args_list[1].kwargs["prior_messages"] == []
+
+
+@patch("times_of_agents.application.discussion_orchestrator.create_crewai_llm")
+@patch("times_of_agents.application.discussion_orchestrator.build_speaking_task")
+@patch("times_of_agents.application.discussion_orchestrator.build_crewai_agent")
+@patch("times_of_agents.application.discussion_orchestrator.Crew")
+def test_topic_included_once_when_disabled(
+    mock_crew_cls, mock_build_agent, mock_build_task, mock_llm_factory
+) -> None:
+    mock_llm_factory.return_value = "anthropic/claude-sonnet-4-5"
+    mock_build_agent.return_value = MagicMock()
+    agents = [_sample_agent("t1", include_topic_every_turn=False)]
+    mock_crew_cls.return_value.kickoff.return_value = _make_crew_output(1)
+    mock_build_task.return_value = MagicMock()
+
+    run_discussion(
+        topic="Topic inclusion test",
+        agent_configs=agents,
+        rounds=2,
+        seed=0,
+        interjections_enabled=False,
+    )
+
+    assert mock_build_task.call_count == 2
+    assert mock_build_task.call_args_list[0].kwargs["include_topic"] is True
+    assert mock_build_task.call_args_list[1].kwargs["include_topic"] is False
+
+
+@patch("times_of_agents.application.discussion_orchestrator.create_crewai_llm")
+@patch("times_of_agents.application.discussion_orchestrator.build_speaking_task")
+@patch("times_of_agents.application.discussion_orchestrator.build_crewai_agent")
+@patch("times_of_agents.application.discussion_orchestrator.Crew")
+def test_run_discussion_uses_agent_temperature_for_llm(
+    mock_crew_cls, mock_build_agent, mock_build_task, mock_llm_factory
+) -> None:
+    mock_llm_factory.return_value = "anthropic/claude-sonnet-4-5"
+    mock_build_agent.return_value = MagicMock()
+    mock_build_task.return_value = MagicMock()
+    mock_crew_cls.return_value.kickoff.return_value = _make_crew_output(2)
+    agents = [
+        _sample_agent("temp1", temperature=0.2),
+        _sample_agent("temp2", temperature=1.1),
+    ]
+
+    run_discussion(
+        topic="Temperature test",
+        agent_configs=agents,
+        rounds=1,
+        seed=0,
+        interjections_enabled=False,
+    )
+
+    assert mock_llm_factory.call_count == 2
+    temperatures = {call.kwargs["temperature"] for call in mock_llm_factory.call_args_list}
+    assert temperatures == {0.2, 1.1}
