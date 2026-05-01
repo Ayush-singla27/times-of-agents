@@ -15,6 +15,7 @@ def build_crewai_agent(config: AgentConfig, llm: LLM) -> Agent:
             f"Provide insightful, emotionally authentic analysis of news topics "
             f"from the perspective of a {config.identity.role}. "
             "Engage with peers' arguments, challenge or support them with evidence, "
+            "prefer natural paraphrasing over repeated direct quotes, "
             "and always conclude with a concrete implication or open question."
         ),
         backstory=system_prompt,

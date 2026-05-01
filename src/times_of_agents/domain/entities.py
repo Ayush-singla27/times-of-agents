@@ -34,8 +34,7 @@ class EmotionProfile:
                 raise ValueError(f"Emotion '{key}' must be between 0.0 and 1.0, got {value}")
 
     def dominant_emotion(self) -> str:
-        ranked = sorted(self.to_dict().items(), key=lambda kv: kv[1], reverse=True)
-        return ranked[0][0]
+        return max(EMOTION_KEYS, key=lambda k: getattr(self, k))
 
     def to_dict(self) -> dict[str, float]:
         return {key: getattr(self, key) for key in EMOTION_KEYS}
@@ -54,10 +53,17 @@ class AgentConfig:
     identity: AgentIdentity
     emotion_profile: EmotionProfile
     speaking_weight: float = 1.0
+    memory_window_messages: int = 8
+    include_topic_every_turn: bool = True
+    temperature: float = 0.7
 
     def __post_init__(self) -> None:
         if self.speaking_weight <= 0:
             raise ValueError("speaking_weight must be positive")
+        if self.memory_window_messages < 0:
+            raise ValueError("memory_window_messages must be >= 0")
+        if not 0.0 <= self.temperature <= 2.0:
+            raise ValueError("temperature must be between 0.0 and 2.0")
 
 
 @dataclass(slots=True)

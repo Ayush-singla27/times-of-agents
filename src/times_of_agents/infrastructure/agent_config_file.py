@@ -6,6 +6,22 @@ from pathlib import Path
 from times_of_agents.domain.entities import AgentConfig, AgentIdentity, EmotionProfile
 
 
+def _parse_bool(value: object, *, default: bool) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "1", "yes", "y", "on"}:
+            return True
+        if normalized in {"false", "0", "no", "n", "off"}:
+            return False
+    if isinstance(value, (int, float)):
+        return bool(value)
+    raise ValueError(f"Invalid boolean value: {value!r}")
+
+
 def load_agent_configs(config_path: Path) -> list[AgentConfig]:
     if not config_path.exists():
         raise FileNotFoundError(f"Agent config file not found: {config_path}")
@@ -44,6 +60,12 @@ def load_agent_configs(config_path: Path) -> list[AgentConfig]:
                 identity=identity,
                 emotion_profile=profile,
                 speaking_weight=float(item.get("speaking_weight", 1.0)),
+                memory_window_messages=int(item.get("memory_window_messages", 8)),
+                include_topic_every_turn=_parse_bool(
+                    item.get("include_topic_every_turn"),
+                    default=True,
+                ),
+                temperature=float(item.get("temperature", 0.7)),
             )
         )
 
