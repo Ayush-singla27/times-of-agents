@@ -76,8 +76,8 @@ def _print_usage_summary(
     )
     if input_rate == 0.0 and output_rate == 0.0:
         print(
-            "Token cost: $0.000000 (set TOKEN_INPUT_COST_PER_1K_USD and "
-            "TOKEN_OUTPUT_COST_PER_1K_USD to enable cost estimation)"
+            "Token cost: $0.000000 (set token_input_cost_per_1k_usd and "
+            "token_output_cost_per_1k_usd in backend config to enable cost estimation)"
         )
     else:
         print(

@@ -5,11 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "times-of-agents"
 version = "0.1.0"
-description = "CLI multi-agent news discussion system"
+description = "API backend for multi-agent daily news generation and discussion"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "Times of Agents Team" }]
-keywords = ["multi-agent", "cli", "news", "simulation"]
+keywords = ["multi-agent", "api", "news", "fastapi", "backend"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
@@ -20,15 +20,19 @@ classifiers = [
 dependencies = [
   "crewai>=0.80.0",
   "requests>=2.31.0",
+  "fastapi>=0.111.0",
+  "uvicorn>=0.30.0",
+  "apscheduler>=3.10.4",
 ]
 
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
+  "httpx>=0.27.0",
 ]
 
 [project.scripts]
-times-of-agents = "times_of_agents.interfaces.cli.main:main"
+times-of-agents-api = "times_of_agents.interfaces.api.main:run"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

@@ -107,7 +107,7 @@ class DiscussionResult:
     usage_summary: TokenUsageSummary | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        payload = {
+        payload: dict[str, Any] = {
             "topic": self.topic,
             "rounds": self.rounds,
             "transcript": [

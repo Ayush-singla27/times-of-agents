@@ -7,6 +7,13 @@ from uuid import uuid4
 
 from crewai import Agent, Crew, Process, Task
 
+from times_of_agents.application.tools.tavily_search import tavily_search_tool
+from times_of_agents.application.tools.trending_news import (
+    NewsArticle,
+    fetch_trending_news,
+    fetch_trending_news_tool,
+    parse_news_payload,
+)
 from times_of_agents.application.usage_tracking import (
     apply_costs,
     collect_usage_from_result,
@@ -16,23 +23,17 @@ from times_of_agents.application.usage_tracking import (
 )
 from times_of_agents.domain.entities import TokenUsageSummary
 from times_of_agents.infrastructure.llm_factory import create_crewai_llm
-from times_of_agents.infrastructure.tavily_search_tool import tavily_search_tool
-from times_of_agents.infrastructure.trending_news_tool import (
-    NewsArticle,
-    fetch_trending_news,
-    fetch_trending_news_tool,
-    parse_news_payload,
-)
 
 logger = logging.getLogger(__name__)
 
 
-def refresh_topic_from_trending_news(
+def generate_topics_from_trending_news(
     *,
     model: str,
     article_count: int = 3,
+    write_articles_to_files: bool = False,
     articles_dir: Path = Path("data/articles"),
-) -> str:
+) -> list[dict[str, Any]]:
     if article_count <= 0:
         raise ValueError("article_count must be positive")
 
@@ -117,13 +118,11 @@ def refresh_topic_from_trending_news(
         used_estimate=used_estimate,
     )
 
-    generated_topics = _save_articles_to_files(
-        articles,
-        articles_dir=articles_dir,
-        search_summaries=search_summaries,
-    )
-    rendered_topic = _render_topic_summary(generated_topics)
-    return rendered_topic
+    generated_topics = _build_topics(articles, search_summaries=search_summaries)
+    if write_articles_to_files:
+        _write_topics_to_files(generated_topics, articles_dir=articles_dir)
+
+    return generated_topics
 
 
 def _extract_articles_from_crew_result(crew_result: Any, *, expected_count: int) -> list[NewsArticle]:
@@ -162,23 +161,16 @@ def _normalize_article(article: NewsArticle) -> NewsArticle:
     )
 
 
-def _save_articles_to_files(
+def _build_topics(
     articles: list[NewsArticle],
     *,
-    articles_dir: Path,
     search_summaries: list[str] | None = None,
-) -> list[tuple[str, NewsArticle, Path]]:
-    articles_dir.mkdir(parents=True, exist_ok=True)
-
-    for stale_file in articles_dir.glob("*.txt"):
-        stale_file.unlink()
-
+) -> list[dict[str, Any]]:
     summaries = _normalize_search_summaries(articles, search_summaries)
+    generated: list[dict[str, Any]] = []
 
-    generated: list[tuple[str, NewsArticle, Path]] = []
     for idx, article in enumerate(articles, start=1):
         topic_id = f"topic-{uuid4().hex[:8]}"
-        filename = articles_dir / f"{idx:02d}_{topic_id}_{_sanitize_filename(article.title)}.txt"
         summary_text = summaries[idx - 1]
         content = (
             f"Title: {article.title}\n"
@@ -188,23 +180,40 @@ def _save_articles_to_files(
             f"Description:\n{article.description}\n\n"
             f"Search Summary (approx. 500 words):\n{summary_text}\n"
         )
-        filename.write_text(content, encoding="utf-8")
-        generated.append((topic_id, article, filename))
+        generated.append(
+            {
+                "topic_id": topic_id,
+                "title": article.title,
+                "source": article.source,
+                "link": article.link,
+                "description": article.description,
+                "search_summary": summary_text,
+                "content": content,
+                "sort_order": idx,
+            }
+        )
 
     return generated
+
+
+def _write_topics_to_files(generated_topics: list[dict[str, Any]], *, articles_dir: Path) -> None:
+    articles_dir.mkdir(parents=True, exist_ok=True)
+    for stale_file in articles_dir.glob("*.txt"):
+        stale_file.unlink()
+
+    for topic in generated_topics:
+        sort_order = int(topic["sort_order"])
+        topic_id = str(topic["topic_id"])
+        title = str(topic["title"])
+        content = str(topic["content"])
+        filename = articles_dir / f"{sort_order:02d}_{topic_id}_{_sanitize_filename(title)}.txt"
+        filename.write_text(content, encoding="utf-8")
 
 
 def _sanitize_filename(title: str) -> str:
     sanitized = "".join(c if c.isalnum() or c in " _-" else "" for c in title)
     slugified = "_".join(sanitized.split()[:5])
     return slugified[:50]
-
-
-def _render_topic_summary(generated_topics: list[tuple[str, NewsArticle, Path]]) -> str:
-    lines = ["Topics for discussion (use --topic-id):"]
-    for idx, (topic_id, article, _path) in enumerate(generated_topics, start=1):
-        lines.append(f"{idx}. [{topic_id}] {article.title}")
-    return "\n".join(lines)
 
 
 def _placeholder_articles(article_count: int) -> list[NewsArticle]:
@@ -358,8 +367,8 @@ def _log_usage_summary(
     )
     if input_rate == 0.0 and output_rate == 0.0:
         logger.info(
-            "News topic token cost: $0.000000 (set TOKEN_INPUT_COST_PER_1K_USD and "
-            "TOKEN_OUTPUT_COST_PER_1K_USD to enable cost estimation)"
+            "News topic token cost: $0.000000 (set token_input_cost_per_1k_usd and "
+            "token_output_cost_per_1k_usd in backend config to enable cost estimation)"
         )
         return
 

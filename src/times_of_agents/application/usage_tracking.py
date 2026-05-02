@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import os
 from typing import Any
 
 from times_of_agents.domain.entities import TokenUsageSummary
+from times_of_agents.infrastructure.backend_settings import get_backend_settings
 
 
 def estimate_tokens(text: str) -> int:
@@ -68,13 +68,11 @@ def merge_usage(target: TokenUsageSummary, addition: TokenUsageSummary) -> None:
 
 
 def resolve_cost_rates() -> tuple[float, float]:
-    input_rate = os.getenv("TOKEN_INPUT_COST_PER_1K_USD")
-    output_rate = os.getenv("TOKEN_OUTPUT_COST_PER_1K_USD")
-    return float(input_rate or 0.0), float(output_rate or 0.0)
+    settings = get_backend_settings()
+    return settings.token_input_cost_per_1k_usd, settings.token_output_cost_per_1k_usd
 
 
 def apply_costs(summary: TokenUsageSummary, input_rate: float, output_rate: float) -> None:
     summary.input_cost_usd = (summary.input_tokens / 1000.0) * input_rate
     summary.output_cost_usd = (summary.output_tokens / 1000.0) * output_rate
     summary.total_cost_usd = summary.input_cost_usd + summary.output_cost_usd
-
