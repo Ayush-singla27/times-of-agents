@@ -16,7 +16,6 @@ _GOOGLE_NEWS_RSS = "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en"
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
 _NON_ALNUM_RE = re.compile(r"[^a-z0-9]+")
 
-
 @dataclass(frozen=True)
 class NewsArticle:
     title: str
